@@ -109,6 +109,18 @@ async function run() {
       res.send(result);
     });
 
+    app.patch('/roadmapItems/:id/comments/:commentId', async (req, res) => {
+      const { id, commentId } = req.params;
+      const { comment } = req.body;
+
+      const result = await roadmapItemCollection.updateOne(
+        { _id: new ObjectId(id), "comments._id": new ObjectId(commentId) },
+        { $set: { "comments.$.comment": comment, "comments.$.editedAt": new Date() } }
+      );
+
+      res.send(result);
+    });
+
 
     app.delete('/roadmapItems/:id/comments/:commentId', async (req, res) => {
       const { id, commentId } = req.params;
@@ -122,27 +134,69 @@ async function run() {
     });
 
 
-    app.post('/roadmapItems/:itemId/comments/:commentId/replies', async (req, res) => {
-      const { itemId, commentId } = req.params;
-      const { userEmail, reply } = req.body;
+    // app.post('/roadmapItems/:itemId/comments/:commentId/replies', async (req, res) => {
+    //   const { itemId, commentId } = req.params;
+    //   const { userEmail, reply } = req.body;
 
-      const newReply = {
+    //   const newReply = {
+    //     _id: new ObjectId(),
+    //     userEmail,
+    //     reply,
+    //     createdAt: new Date()
+    //   };
+
+    //   const result = await roadmapItemCollection.updateOne(
+    //     {
+    //       _id: new ObjectId(itemId),
+    //       "comments._id": new ObjectId(commentId)
+    //     },
+    //     {
+    //       $push: {
+    //         "comments.$.replies": newReply
+    //       }
+    //     }
+    //   );
+
+    //   res.send(result);
+    // });
+
+    app.post('/roadmapItems/:itemId/comments/:commentId/reply', async (req, res) => {
+      const { itemId, commentId } = req.params;
+      const { userEmail, comment, parentIds = [] } = req.body;
+
+      const reply = {
         _id: new ObjectId(),
         userEmail,
-        reply,
-        createdAt: new Date()
+        comment,
+        createdAt: new Date(),
+        replies: []
       };
 
+      const item = await roadmapItemCollection.findOne({ _id: new ObjectId(itemId) });
+
+      if (!item) return res.status(404).send({ message: "Item not found" });
+
+      let comments = item.comments || [];
+
+      // Traverse nested replies based on parentIds
+      let target = comments;
+      for (const id of parentIds) {
+        const parent = target.find(c => c._id.toString() === id);
+        if (!parent) return res.status(400).send({ message: "Invalid nesting path" });
+        if (!parent.replies) parent.replies = [];
+        target = parent.replies;
+      }
+
+      // Limit depth to 3
+      if (parentIds.length >= 3) {
+        return res.status(400).send({ message: "Max nesting depth (3) exceeded" });
+      }
+
+      target.push(reply);
+
       const result = await roadmapItemCollection.updateOne(
-        {
-          _id: new ObjectId(itemId),
-          "comments._id": new ObjectId(commentId)
-        },
-        {
-          $push: {
-            "comments.$.replies": newReply
-          }
-        }
+        { _id: new ObjectId(itemId) },
+        { $set: { comments } }
       );
 
       res.send(result);

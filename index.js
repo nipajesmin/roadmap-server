@@ -82,7 +82,7 @@ async function run() {
       const { userEmail, comment } = req.body;
 
       const newComment = {
-        _id: new ObjectId(), // ✅ Needed for edit/delete
+        _id: new ObjectId(), 
         userEmail,
         comment,
         createdAt: new Date()

@@ -51,11 +51,23 @@ async function run() {
       res.send(result);
     })
 
+    // app.get('/users', async (req, res) => {
+    //   const cursor = userCollection.find();
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // })
+
     app.get('/users', async (req, res) => {
-      const cursor = userCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    })
+      try {
+        const cursor = userCollection.find();
+        const result = await cursor.toArray();
+        res.send(result);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        res.status(500).send({ message: 'Server error' });
+      }
+    });
+
 
     app.get('/roadmapItems', async (req, res) => {
       const cursor = roadmapItemCollection.find();

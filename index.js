@@ -11,9 +11,9 @@ app.use(cors());
 app.use(express.json());
 
 
-app.get('/', (req, res) => {
-  res.send('server running');
-})
+// app.get('/', (req, res) => {
+//   res.send('server running');
+// })
 
 
 
@@ -211,8 +211,11 @@ async function run() {
 }
 run().catch(console.dir);
 
+app.use("/", (req, res) => {
+  res.send("Roadmap Server is running");
+});
 
+app.listen(port, (req, res) => {
+  console.log(`Running port is ${port}`);
+});
 
-app.listen(port, () => {
-  console.log(`server running in port ${port}`)
-})

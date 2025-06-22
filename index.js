@@ -224,9 +224,9 @@ async function run() {
 run().catch(console.dir);
 
 
-// app.use("/", (req, res) => {
-//   res.send("Marriage BD Server is running");
-// });
+app.get("/", (req, res) => {
+  res.send("Marriage BD Server is running");
+});
 
 app.listen(port, (req, res) => {
   console.log(`Running port is ${port}`);
